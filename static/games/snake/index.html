@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snake Game - Portal</title>
+    <!-- CSS do portal (opcional) -->
+    <link rel="stylesheet" href="/static/css/style.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="document.getElementById('gameCanvas').focus()">
+    <div class="score">Pontos: <span id="score">0</span> | Melhor: <span id="highScore">0</span></div>
+    
+    <!-- ADICIONAMOS tabindex e foco automático -->
+    <canvas id="gameCanvas" width="400" height="400" tabindex="1"></canvas>
+    
+    <div id="gameOver" class="game-over">
+        <h2>GAME OVER!</h2>
+        <p style="font-size:1.4rem;">Pontos Finais: <span id="finalScore">0</span></p>
+        <button class="restart-btn" onclick="restartGame()">Jogar Novamente</button>
+    </div>
+
+    <script src="/static/games/snake/snake.js"></script>
+    <script>
+        initGame();
+        
+        // Garante o foco quando clicar em qualquer lugar da tela
+        document.body.addEventListener('click', () => {
+            document.getElementById('gameCanvas').focus();
+        });
+        
+        // Foco automático ao carregar
+        window.onload = () => {
+            document.getElementById('gameCanvas').focus();
+        };
+    </script>
+</body>
+</html>

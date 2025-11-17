@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Snake Game",
+    "description": "Jogo clássico da cobrinha! Use as setas para comer as maçãs.",
+    "url": "/static/games/snake/index.html",
+    "code": "snake"
+  },
+  {
+    "name": "Pong Championship",
+    "description": "Clássico dos anos 70! Jogue contra a IA ou um amigo.",
+    "url": "/static/games/pong/index.html",
+    "code": "pong"
+  },
+  {
+    "name": "Tetris Master",
+    "description": "Empilhe os blocos e faça linhas completas!",
+    "url": "/static/games/tetris/index.html",
+    "code": "tetris"
+  }
+]

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal - Jogos e Projetos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body { 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; 
+            font-family: 'Segoe UI', sans-serif;
+        }
+        .dashboard { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; }
+        .projects-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); 
+            gap: 30px; 
+        }
+        .project-card-user {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: all 0.4s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        .project-card-user:hover { 
+            transform: translateY(-12px); 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .project-title-user { 
+            font-size: 1.8rem; 
+            margin: 15px 0; 
+            color: white; 
+            font-weight: 600;
+        }
+        .project-desc-user { 
+            color: rgba(255,255,255,0.9); 
+            margin-bottom: 20px; 
+            line-height: 1.5;
+        }
+        .play-full-btn { 
+            background: linear-gradient(45deg, #00d4aa, #00b894);
+            color: white; 
+            padding: 16px 32px; 
+            border-radius: 50px; 
+            font-size: 1.3rem; 
+            text-decoration: none; 
+            font-weight: 700; 
+            display: inline-block;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(0,212,170,0.4);
+        }
+        .play-full-btn:hover { 
+            transform: scale(1.08); 
+            background: linear-gradient(45deg, #00b894, #00d4aa);
+        }
+        .btn-ranking {
+            background: #9c27b0;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 0;
+            transition: all 0.3s;
+        }
+        .btn-ranking:hover {
+            background: #7b1fa2;
+            transform: translateY(-3px);
+        }
+        .no-games {
+            text-align: center; 
+            color: white; 
+            padding: 80px 20px;
+        }
+        .no-games i { font-size: 6rem; opacity: 0.3; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1 style="color: white; font-size: 3.5rem; margin: 0;">
+                Portal de Jogos
+            </h1>
+            <p>Bem-vindo, <strong>{{ session['username'] or 'Jogador' }}</strong> • 
+               <a href="{{ url_for('logout') }}" style="color: #ff6b6b; text-decoration: underline;">Sair</a>
+            </p>
+        </div>
+
+        {% if projects|length == 0 %}
+        <div class="no-games">
+            <i class="fas fa-gamepad"></i>
+            <h2>Nenhum jogo disponível ainda...</h2>
+            <p>O admin está trabalhando nisso!</p>
+        </div>
+        {% else %}
+        <div class="projects-grid">
+            {% for project in projects %}
+            <div class="project-card-user">
+                <i class="fas fa-gamepad" style="font-size: 4.5rem; color: #00d4aa; margin-bottom: 20px;"></i>
+                
+                <h2 class="project-title-user">{{ project.name }}</h2>
+                <p class="project-desc-user">{{ project.description }}</p>
+
+                <!-- Ranking Global (só se tiver code) -->
+                {% if project.code %}
+                <a href="{{ url_for('leaderboard', identifier=project.code) }}" class="btn-ranking">
+                    Ranking Global
+                </a>
+                {% endif %}
+
+                <!-- Botão Jogar -->
+                {% if project.url %}
+                <a href="{{ url_for('play_project', identifier=project.code or project.id) }}" 
+                   class="play-full-btn">
+                    JOGAR FULLSCREEN
+                </a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

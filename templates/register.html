@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro - Portal</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Criar Conta</h1>
+
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flash-messages">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('register') }}">
+            <div class="form-group">
+                <label>Usuário</label>
+                <input type="text" name="username" placeholder="Escolha um usuário" required>
+            </div>
+            <div class="form-group">
+                <label>Senha</label>
+                <input type="password" name="password" placeholder="Crie uma senha forte" required>
+            </div>
+            <button type="submit" class="btn">Cadastrar</button>
+        </form>
+
+        <div class="link">
+            Já tem conta? <a href="{{ url_for('login') }}">Fazer login</a>
+        </div>
+    </div>
+</body>
+</html>

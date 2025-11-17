@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Portal de Jogos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+    </style>
+</head>
+<body>
+
+<div class="dashboard">
+
+    <div class="admin-header">
+        <h1>Painel do Super Usuário</h1>
+        <p>Bem-vindo, <strong>super</strong> | <a href="{{ url_for('logout') }}" style="color:#ff6b6b;">Sair</a></p>
+    </div>
+
+    <!-- Estatísticas -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <i class="fas fa-gamepad" style="font-size:3rem; opacity:0.7;"></i>
+            <div class="stat-number">{{ projects|length }}</div>
+            <p>Projetos Ativos</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-users" style="font-size:3rem; opacity:0.7;"></i>
+            <div class="stat-number">{{ total_users }}</div>
+            <p>Usuários Cadastrados</p>
+        </div>
+        <div class="stat-card">
+            <i class="fas fa-trophy" style="font-size:3rem; opacity:0.7;"></i>
+            <div class="stat-number">∞</div>
+            <p>Poder Total</p>
+        </div>
+    </div>
+
+    <!-- Lista de Projetos -->
+    <h2 style="color:white; margin-bottom:20px;">Seus Jogos e Projetos</h2>
+
+    <div class="projects-grid">
+        {% for project in projects %}
+        <div class="project-card">
+            <div class="project-thumb">
+                <i class="fas fa-gamepad"></i>
+            </div>
+            <div class="project-info">
+                <div class="project-title">{{ project.name }}</div>
+                <div class="project-desc">{{ project.description }}</div>
+                <div class="project-actions">
+
+                    <!-- Ranking (só aparece se tiver code) -->
+                    {% if project.code %}
+                    <a href="{{ url_for('leaderboard', identifier=project.code) }}"
+                       class="btn-small" style="background:#9c27b0;">
+                       Ranking Global
+                    </a>
+                    {% endif %}
+
+                    <!-- Jogar Fullscreen (sempre aparece se tiver URL) -->
+                    {% if project.url %}
+                    <a href="{{ url_for('play_project', identifier=project.code or project.id) }}"
+                       target="_blank" class="btn-small btn-play">
+                       Fullscreen
+                    </a>
+                    {% endif %}
+
+                    <!-- Excluir -->
+                    <a href="{{ url_for('delete_project', project_id=project.id) }}"
+                       class="btn-small btn-delete"
+                       onclick="return confirm('Tem certeza que quer excluir {{ project.name }}?')">
+                       Excluir
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if projects|length == 0 %}
+    <div class="card" style="text-align:center; padding:50px;">
+        <h3>Nenhum projeto ainda...</h3>
+        <p>Clique no botão + para adicionar o primeiro!</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- Botão Flutuante -->
+<div class="btn-floating" onclick="document.getElementById('addModal').classList.add('active')">
+    <i class="fas fa-plus"></i>
+</div>
+
+<!-- Modal de Adicionar Projeto -->
+<div id="addModal" class="modal">
+    <div class="modal-content">
+        <h2 style="text-align:center; margin-bottom:20px;">Adicionar Novo Projeto</h2>
+        <form method="POST" action="{{ url_for('add_project') }}">
+            <input type="text" name="name" placeholder="Nome do jogo/projeto" required
+                   style="width:100%; padding:14px; margin:10px 0; border-radius:10px; border:none; background:rgba(255,255,255,0.2); color:white;">
+
+            <textarea name="description" placeholder="Descrição legal aqui..." required
+                      style="width:100%; height:100px; padding:14px; margin:10px 0; border-radius:10px; border:none; background:rgba(255,255,255,0.2); color:white; resize:none;"></textarea>
+
+            <input type="text" name="url" placeholder="URL do jogo (ex: /static/games/snake/index.html)"
+                   style="width:100%; padding:14px; margin:10px 0; border-radius:10px; border:none; background:rgba(255,255,255,0.2); color:white;">
+
+            <!-- CAMPO CODE (OPCIONAL) -->
+            <input type="text" name="code" placeholder="Código único (opcional: snake, pong, tetris...)"
+                   style="width:100%; padding:14px; margin:10px 0; border-radius:10px; border:none; background:rgba(255,255,255,0.2); color:white;">
+            <small style="color:#aaa; margin-left:10px; display:block;">
+                Deixe vazio se não quiser ranking personalizado
+            </small>
+
+            <div style="text-align:center; margin-top:20px;">
+                <button type="submit" class="btn" style="width:48%; margin:0 5px;">Adicionar</button>
+                <button type="button" class="btn" style="background:#95a5a6; width:48%; margin:0 5px;"
+                        onclick="document.getElementById('addModal').classList.remove('active')">
+                    Cancelar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>
