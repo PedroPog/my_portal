@@ -93,20 +93,18 @@
             </div>
 
             {% if projects|length == 0 %}
-            <!-- Botão Flutuante -->
-            <a href="{{ url_for('create_game_page') }}" class="btn-floating">
-                <i class="fas fa-plus"></i>
-            </a>
-            <!-- Sorry -->
+            <div class="card" style="text-align:center; padding:50px;">
+                <h3>Nenhum projeto ainda...</h3>
+                <p>Clique no botão + para adicionar o primeiro!</p>
+            </div>
             {% endif %}
 
         </div>
 
         <!-- Botão Flutuante -->
-        <div class="btn-floating"
-            onclick="document.getElementById('addModal').classList.add('active')">
+        <a href="{{ url_for('create_game_page') }}" class="btn-floating">
             <i class="fas fa-plus"></i>
-        </div>
+        </a>
 
         <!-- Modal de Adicionar Projeto -->
         <div id="addModal" class="modal">
