@@ -1,52 +1,72 @@
+import os
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from models import db, User, Project, Score
 from datetime import datetime
-import json
-import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'mude_isso_para_uma_chave_forte_aqui_123!'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+GAMES_DIR = os.path.join(app.static_folder, 'games')
 db.init_app(app)
 
+@app.route('/create-game')
+def create_game_page():
+    if not session.get('is_super'):
+        return redirect(url_for('login'))
+    return render_template('create_game.html')
 
-# ==============================
-# SEED DE JOGOS (só roda uma vez)
-# ==============================
-def seed_games():
-    if Project.query.first():
-        print("Jogos já existem no banco. Seed ignorado.")
-        return
+@app.route('/api/create-game', methods=['POST'])
+def api_create_game():
+    if not session.get('is_super'):
+        return jsonify({'error': 'Não autorizado'}), 401
 
-    if not os.path.exists('games.json'):
-        print("games.json não encontrado. Pulando seed.")
-        return
+    data = request.get_json()
+    name = data.get('name', '').strip()
+    description = data.get('description', '').strip()
+    code = data.get('code', '').strip().lower()
+    files = data.get('files', {})
 
-    try:
-        with open('games.json', 'r', encoding='utf-8') as f:
-            games = json.load(f)
+    if not name or not description or not code:
+        return jsonify({'error': 'Nome, descrição e código são obrigatórios'}), 400
 
-        for game in games:
-            new_game = Project(
-                name=game['name'],
-                description=game['description'],
-                url=game['url'],
-                code=game.get('code')  # pode não ter code
-            )
-            db.session.add(new_game)
-        db.session.commit()
-        print(f"{len(games)} jogos criados via seed!")
-    except Exception as e:
-        print(f"Erro no seed: {e}")
+    if Project.query.filter_by(code=code).first():
+        return jsonify({'error': f'Código "{code}" já existe!'}), 400
 
+    # Cria pasta do jogo
+    game_path = os.path.join(GAMES_DIR, code)
+    os.makedirs(game_path, exist_ok=True)
+
+    # Arquivos padrão se não vierem
+    default_files = {
+        'index.html': '<h1>Bem-vindo ao meu jogo!</h1>',
+        'style.css': 'body { font-family: Arial; text-align: center; padding: 50px; background: #111; color: white; }',
+        'script.js': 'console.log("Jogo carregado!");'
+    }
+
+    # Salva cada arquivo
+    for filename, content in {**default_files, **files}.items():
+        filepath = os.path.join(game_path, secure_filename(filename))
+        with open(filepath, 'w', encoding='utf-8') as f:
+            f.write(content.strip())
+
+    # Salva no banco
+    new_project = Project(
+        name=name,
+        description=description,
+        url=f'/static/games/{code}/index.html',
+        code=code
+    )
+    db.session.add(new_project)
+    db.session.commit()
+
+    return jsonify({'success': True, 'url': f'/play/{code}'})
 
 # ==============================
 # CRIA BANCO + SUPER USER + SEED
 # ==============================
 with app.app_context():
     db.create_all()
-    seed_games()
 
     if not User.query.filter_by(username='super').first():
         super_user = User(username='super', is_super=True)

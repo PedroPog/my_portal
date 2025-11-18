@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>Criar Novo Jogo - Portal</title>
+ <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+ <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.44.0/min/vs/loader.js"></script>
+ <style>
+  body { margin:0; background:#1e1e1e; color:#fff; font-family: 'Segoe UI', sans-serif; }
+  .header {
+   background: #0d7377; padding: 20px; text-align: center; font-size: 2rem; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+  .container { display: flex; flex-direction: column; height: calc(100vh - 80px); padding: 20px; gap: 20px; }
+  .top-form { display: grid; grid-template-columns: 2fr 3fr 1fr; gap: 15px; }
+  input, textarea { padding: 14px; border-radius: 10px; border: none; background: #2d2d2d; color: white; font-size: 1rem; }
+  textarea { grid-column: span 2; resize: vertical; }
+  .editor-container { flex: 1; border: 1px solid #444; border-radius: 12px; overflow: hidden; }
+  #editor { width: 100%; height: 100%; }
+  .tabs { display: flex; background: #212121; }
+  .tab { padding: 12px 24px; background: #2d2d2d; cursor: pointer; border-right: 1px solid #444; }
+  .tab.active { background: #0d7377; font-weight: bold; }
+  .bottom-bar { display: flex; justify-content: space-between; padding: 15px; background: #212121; }
+  button { padding: 14px 32px; font-size: 1.1rem; border: none; border-radius: 10px; cursor: pointer; }
+  .btn-save { background: #00d4aa; color: black; font-weight: bold; }
+  .btn-back { background: #444; color: white; }
+ </style>
+</head>
+<body>
+
+ <div class="header">
+  Criar Novo Jogo no Portal
+ </div>
+
+ <div class="container">
+  <div class="top-form">
+   <input type="text" id="name" placeholder="Nome do jogo (ex: Super Snake)">
+   <textarea id="description" placeholder="Descrição incrível do seu jogo..."></textarea>
+   <input type="text" id="code" placeholder="Código (ex: snake)">
+  </div>
+
+  <div class="tabs">
+   <div class="tab active" data-file="index.html">index.html</div>
+   <div class="tab" data-file="style.css">style.css</div>
+   <div class="tab" data-file="script.js">script.js</div>
+  </div>
+
+  <div class="editor-container">
+   <div id="editor"></div>
+  </div>
+
+  <div class="bottom-bar">
+   <a href="/dashboard" class="btn-back">Voltar</a>
+   <button class="btn-save" onclick="saveGame()">SALVAR E PUBLICAR</button>
+  </div>
+ </div>
+ <script src="create_game.js"></script>
+</body>
+</html>

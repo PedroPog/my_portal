@@ -37,7 +37,6 @@ class Score(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     project_id = db.Column(db.Integer, db.ForeignKey('project.id'), nullable=False)
     score = db.Column(db.Integer, nullable=False)
-    # ← MELHOR FORMA: funciona em TODAS as versões do Python
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     user = db.relationship('User', backref='scores')

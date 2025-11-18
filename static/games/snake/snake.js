@@ -1,238 +1,165 @@
-let canvas, ctx, score = 0, highScore = localStorage.getItem('snakeHighScore') || 0;
-let snake = [{x: 10, y: 10}], dx = 0, dy = 0, food = {}, gameRunning = false; // Para no mobile
-const gridSize = 20, tileCount = 20;
-let joystickActive = false, joystickAngle = 0;
-let touchStartX = 0, touchStartY = 0;
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-// ===== INICIALIZAÇÃO =====
-function initGame() {
-    canvas = document.getElementById('gameCanvas');
-    ctx = canvas.getContext('2d');
-    
-    // RESPONSIVO: adapta ao mobile
-    function resizeCanvas() {
-        const maxSize = Math.min(window.innerWidth * 0.95, window.innerHeight * 0.7);
-        canvas.width = Math.floor(maxSize / gridSize) * gridSize;
-        canvas.height = canvas.width;
-        tileCount = canvas.width / gridSize;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
-    
-    // CONTROLES TECLADO (desktop)
-    document.addEventListener('keydown', changeDirection);
-    canvas.addEventListener('keydown', changeDirection);
-    
-    // CONTROLES TOUCH/SWIPE (mobile)
-    canvas.addEventListener('touchstart', handleTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-    
-    // Clique/tap inicia o jogo
-    canvas.addEventListener('click', () => { if (!gameRunning) startGame(); });
-    canvas.addEventListener('touchstart', () => { if (!gameRunning) startGame(); });
-    
-    // Foco automático
-    canvas.focus();
-    
-    createFood();
-    document.getElementById('highScore').textContent = highScore;
+let grid = 20;
+let count = 0;
+let score = 0;
+let highScore = localStorage.getItem('snakeHigh') || 0;
+document.getElementById('highScore').textContent = highScore;
+
+let snake = [
+    {x: 10, y: 10}
+];
+let apple = {x: 15, y: 15};
+let dx = 0;
+let dy = 0;
+let changingDirection = false;
+let gameInterval;
+
+// ===== RESPONSIVO =====
+function resize() {
+    const size = Math.min(window.innerWidth - 40, window.innerHeight - 200);
+    canvas.width = canvas.height = Math.floor(size / grid) * grid;
 }
+resize();
+window.addEventListener('resize');
 
-// ===== INÍCIO DO JOGO (mobile precisa de toque primeiro) =====
-function startGame() {
-    gameRunning = true;
-    document.querySelector('.tutorial').style.display = 'none';
-}
+// ===== CONTROLES TECLADO (WEB) =====
+document.addEventListener('keydown', e => {
+    if (changingDirection) return;
+    changingDirection = true;
 
-// ===== SWIPE GESTURES (super intuitivo no mobile) =====
-function handleTouchStart(e) {
+    const key = e.keyCode;
+    if (key == 37 && dx != 1) { dx = -1; dy = 0; }
+    if (key == 38 && dy != 1) { dx = 0; dy = -1; }
+    if (key == 39 && dx != -1) { dx = 1; dy = 0; }
+    if (key == 40 && dy != -1) { dx = 0; dy = 1; }
+});
+
+// ===== CONTROLES TOUCH/SWIPE (MOBILE) =====
+let touchStartX = 0;
+let touchStartY = 0;
+
+canvas.addEventListener('touchstart', e => {
     e.preventDefault();
-    const touch = e.touches[0];
-    touchStartX = touch.clientX;
-    touchStartY = touch.clientY;
-    showJoystick(touch.clientX, touch.clientY);
-}
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+});
 
-function handleTouchMove(e) {
-    e.preventDefault();
-    if (!gameRunning) return;
-    
-    const touch = e.touches[0];
-    const deltaX = touch.clientX - touchStartX;
-    const deltaY = touch.clientY - touchStartY;
-    
-    // Atualiza joystick visual
-    updateJoystick(deltaX, deltaY);
-    
-    // Detecta direção dominante (swipe)
-    if (Math.abs(deltaX) > Math.abs(deltaY)) {
-        // Horizontal
-        if (deltaX > 30 && dx !== -1) { dx = 1; dy = 0; }  // Direita
-        else if (deltaX < -30 && dx !== 1) { dx = -1; dy = 0; } // Esquerda
-    } else {
-        // Vertical
-        if (deltaY > 30 && dy !== -1) { dx = 0; dy = 1; }  // Baixo
-        else if (deltaY < -30 && dy !== 1) { dx = 0; dy = -1; } // Cima
-    }
-}
+canvas.addEventListener('touchend', e => {
+    if (!e.touches.length) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
 
-function handleTouchEnd(e) {
-    e.preventDefault();
-    hideJoystick();
-}
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
 
-// ===== JOYSTICK VISUAL (discreto e mobile-only) =====
-function showJoystick(clientX, clientY) {
-    const zone = document.getElementById('joystickZone');
-    const knob = document.getElementById('joystickKnob');
-    zone.style.display = 'block';
-    zone.style.left = (clientX - 60) + 'px';
-    zone.style.top = (clientY - 60) + 'px';
-    joystickActive = true;
-}
-
-function updateJoystick(deltaX, deltaY) {
-    const knob = document.getElementById('joystickKnob');
-    const dist = Math.min(30, Math.sqrt(deltaX*deltaX + deltaY*deltaY));
-    const angle = Math.atan2(deltaY, deltaX);
-    const knobX = 30 + Math.cos(angle) * dist;
-    const knobY = 30 + Math.sin(angle) * dist;
-    knob.style.left = knobX + 'px';
-    knob.style.top = knobY + 'px';
-}
-
-function hideJoystick() {
-    document.getElementById('joystickZone').style.display = 'none';
-    joystickActive = false;
-}
-
-// ===== CONTROLES TECLADO (igual antes) =====
-function changeDirection(e) {
-    const LEFT = 37, UP = 38, RIGHT = 39, DOWN = 40;
-    if ((e.keyCode === LEFT || e.key === 'ArrowLeft') && dx !== 1) { dx = -1; dy = 0; }
-    if ((e.keyCode === UP || e.key === 'ArrowUp') && dy !== 1) { dx = 0; dy = -1; }
-    if ((e.keyCode === RIGHT || e.key === 'ArrowRight') && dx !== -1) { dx = 1; dy = 0; }
-    if ((e.keyCode === DOWN || e.key === 'ArrowDown') && dy !== -1) { dx = 0; dy = 1; }
-    if (!gameRunning) startGame();
-    canvas.focus();
-}
-
-// Resto do código igual (createFood, drawGame, update, gameLoop, gameOver, restartGame)
-function createFood() {
-    do {
-        food = {
-            x: Math.floor(Math.random() * tileCount),
-            y: Math.floor(Math.random() * tileCount)
-        };
-    } while (snake.some(part => part.x === food.x && part.y === food.y));
-}
-
-function drawGame() {
-    ctx.fillStyle = '#000';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    // Grade
-    ctx.strokeStyle = '#111';
-    ctx.lineWidth = 1;
-    for (let i = 0; i <= canvas.width; i += gridSize) {
-        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-    }
-    for (let i = 0; i <= canvas.height; i += gridSize) {
-        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
-    }
-
-    // Cobra
-    for (let i = 0; i < snake.length; i++) {
-        ctx.save();
-        ctx.translate(snake[i].x * gridSize + gridSize/2, snake[i].y * gridSize + gridSize/2);
-        let gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, gridSize/2);
-        if (i === 0) {
-            gradient.addColorStop(0, '#00ff88'); gradient.addColorStop(1, '#00cc66');
+        if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            // Horizontal
+            if (deltaX > 30 && dx != -1) { dx = 1; dy = 0; }
+            if (deltaX < -30 && dx != 1) { dx = -1; dy = 0; }
         } else {
-            gradient.addColorStop(0, '#00cc66'); gradient.addColorStop(1, '#008844');
-        }
-        ctx.fillStyle = gradient;
-        ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 15;
-        ctx.fillRect(-gridSize/2 + 1, -gridSize/2 + 1, gridSize - 2, gridSize - 2);
-        ctx.shadowBlur = 0;
-        ctx.restore();
-    }
-
-    // Comida
-    ctx.save();
-    ctx.translate(food.x * gridSize + gridSize/2, food.y * gridSize + gridSize/2);
-    let foodGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, gridSize/2);
-    foodGradient.addColorStop(0, '#ff4444'); foodGradient.addColorStop(1, '#cc0000');
-    ctx.shadowColor = '#ff6666'; ctx.shadowBlur = 20;
-    ctx.fillStyle = foodGradient;
-    ctx.beginPath();
-    ctx.arc(0, 0, gridSize/2 - 2, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.shadowBlur = 0;
-    ctx.restore();
-}
-
-function update() {
-    if (!gameRunning) return;
-
-    if (dx === 0 && dy === 0) return; // Cobra parada no mobile
-
-    const head = {x: snake[0].x + dx, y: snake[0].y + dy};
-
-    if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-        gameOver(); return;
-    }
-
-    for (let part of snake) {
-        if (head.x === part.x && head.y === part.y) {
-            gameOver(); return;
+            // Vertical
+            if (deltaY > 30 && dy != -1) { dx = 0; dy = 1; }
+            if (deltaY < -30 && dy != 1) { dx = 0; dy = -1; }
         }
     }
+});
 
-    snake.unshift(head);
-
-    if (head.x === food.x && head.y === food.y) {
-        score += 10;
-        document.getElementById('score').textContent = score;
-        if (score > highScore) {
-            highScore = score;
-            localStorage.setItem('snakeHighScore', highScore);
-            document.getElementById('highScore').textContent = highScore;
-        }
-        createFood();
-    } else {
-        snake.pop();
+// ===== LOOP DO JOGO =====
+function main() {
+    if (dx === 0 && dy === 0) {
+        // Primeiro toque/tecla inicia o jogo
+        return requestAnimationFrame(main);
     }
+
+    if (changingDirection) return;
+    changingDirection = true;
+
+    setTimeout(() => {
+        changingDirection = false;
+
+        // Move
+        let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+
+        // Parede = game over
+        if (head.x < 0 || head.x >= canvas.width/grid || head.y < 0 || head.y >= canvas.height/grid) {
+            gameOver();
+            return;
+        }
+
+        // Comeu a si mesma
+        for (let segment of snake) {
+            if (head.x == segment.x && head.y == segment.y) {
+                gameOver();
+                return;
+            }
+        }
+
+        snake.unshift(head);
+
+        // Comeu maçã
+        if (head.x == apple.x && head.y == apple.y) {
+            score += 10;
+            document.getElementById('score').textContent = score;
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('snakeHigh', highScore);
+                document.getElementById('highScore').textContent = highScore;
+            }
+            // Nova maçã
+            apple = {
+                x: Math.floor(Math.random() * (canvas.width/grid)),
+                y: Math.floor(Math.random() * (canvas.height/grid))
+            };
+        } else {
+            snake.pop();
+        }
+
+        // Desenha
+        ctx.fillStyle = 'black';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Maçã
+        ctx.fillStyle = '#e74c3c';
+        ctx.fillRect(apple.x * grid + 2, apple.y * grid + 2, grid - 4, grid - 4);
+
+        // Cobra
+        snake.forEach((s, i) => {
+            ctx.fillStyle = i === 0 ? '#2ecc71' : '#27ae60';
+            ctx.fillRect(s.x * grid + 2, s.y * grid + 2, grid - 4, grid - 4);
+        });
+
+        requestAnimationFrame(main);
+    }, 130);
 }
 
-function gameLoop() {
-    update();
-    drawGame();
-    setTimeout(gameLoop, 150);
-}
-
+// ===== GAME OVER =====
 function gameOver() {
-    gameRunning = false;
+    clearTimeout(gameInterval);
     document.getElementById('finalScore').textContent = score;
     document.getElementById('gameOver').style.display = 'block';
-    
-    // ENVIA PONTUAÇÃO (se no portal)
-    if (window.location.pathname.includes('/play/')) {
+
+    // Envia pro ranking do portal
+    if (window.location.pathname.includes('/play/snake')) {
         fetch('/submit_score/snake', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ score: score })
-        }).catch(() => {}); // Silencioso se offline
+        });
     }
 }
 
+// ===== REINICIAR =====
 function restartGame() {
     snake = [{x: 10, y: 10}];
-    dx = 0; dy = 0; score = 0;
-    document.getElementById('score').textContent = 0;
+    apple = {x: 15, y: 15};
+    dx = 0; dy = 0;
+    score = 0;
+    document.getElementById('score').textContent = '0';
     document.getElementById('gameOver').style.display = 'none';
-    gameRunning = true;
-    createFood();
-    canvas.focus();
+    main();
 }
+
+// ===== INICIA AUTOMÁTICO =====
+main();
