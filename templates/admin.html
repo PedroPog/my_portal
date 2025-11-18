@@ -93,10 +93,11 @@
             </div>
 
             {% if projects|length == 0 %}
-            <div class="card" style="text-align:center; padding:50px;">
-                <h3>Nenhum projeto ainda...</h3>
-                <p>Clique no botão + para adicionar o primeiro!</p>
-            </div>
+            <!-- Botão Flutuante -->
+            <a href="{{ url_for('create_game_page') }}" class="btn-floating">
+                <i class="fas fa-plus"></i>
+            </a>
+            <!-- Sorry -->
             {% endif %}
 
         </div>
